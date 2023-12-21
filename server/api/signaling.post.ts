@@ -19,9 +19,9 @@ export default defineEventHandler(async (event) => {
 
   const audioSource = new NodeWebRtcAudioStreamSource();
   const file = fs.createReadStream(
-    resolve(process.cwd(), "./helpers/openai-alloy-fr.raw")
+    resolve(process.cwd(), "./helpers/test.pcm")
   );
-  audioSource.addStream(file, 16, 24000, 1);
+  audioSource.addStream(file, 16, 16000, 1);
   const audioTrack = audioSource.createTrack();
   peerConnection.addTrack(audioTrack);
   await peerConnection.setRemoteDescription(new RTCSessionDescription(body));
@@ -30,73 +30,7 @@ export default defineEventHandler(async (event) => {
 
   const response = JSON.stringify(peerConnection.localDescription);
   event.node.res.end(response);
-  // setTimeout(() => {
-  //   sendAudioFile(audioSource);
-  // }, 10);
 });
-
-// class NodeWebRtcAudioStreamSource extends wrtc.nonstandard.RTCAudioSource {
-//   addStream(
-//     readable: Readable,
-//     bitsPerSample = 16,
-//     sampleRate = 16000,
-//     channelCount = 1
-//   ) {
-//     let cache = Buffer.alloc(0);
-//     let streamEnd = false;
-//     readable.on("data", (buffer) => {
-//       cache = Buffer.concat([cache, buffer]);
-//     });
-
-//     readable.on("end", () => {
-//       streamEnd = true;
-//     });
-
-//     const processData = () => {
-//       const byteLength =
-//         ((sampleRate * bitsPerSample) / 8 / 100) * channelCount; // node-webrtc audio by default every 10ms, it is 1/100 second
-//       if (cache.length >= byteLength || streamEnd) {
-//         const buffer = cache.slice(0, byteLength);
-//         cache = cache.slice(byteLength);
-//         const samples = new Int16Array(new Uint8Array(buffer).buffer);
-//         this.onData({
-//           bitsPerSample: 16,
-//           sampleRate,
-//           channelCount: 1,
-//           numberOfFrames: samples.length,
-//           samples,
-//         });
-//       }
-//       if (!streamEnd || cache.length >= byteLength) {
-//         setTimeout(() => processData(), 9.8); // every 10 ms, required by node-webrtc audio
-//       }
-//     };
-//     processData();
-//   }
-// }
-
-// function sendAudioFile(source: InstanceType<typeof RTCAudioSource>) {
-//   // const file = fs.createReadStream("/Users/dieudonn/Documents/ulaw.raw");
-//   const file = fs.createReadStream(
-//     resolve(process.cwd(), "./helpers/testlong.pcm")
-//   );
-//   file.on("data", (chunk: Buffer) => {
-//     // Here, you need to convert the raw audio data to suitable WebRTC track samples
-//     // This part depends on your specific audio format and how you want to handle it
-//     for (let i = 0; i < chunk.length - 320; i += 320) {
-//       const newBuffer = new Uint8Array(320);
-//       chunk.copy(newBuffer, 0, i, i + 320);
-//       const samples = new Int16Array(newBuffer.buffer);
-//       source.onData({
-//         numberOfFrames: samples.length,
-//         channelCount: 1,
-//         bitsPerSample: 16,
-//         samples,
-//         sampleRate: 16000,
-//       });
-//     }
-//   });
-// }
 
 class NodeWebRtcAudioStreamSource extends wrtc.nonstandard.RTCAudioSource {
   private startTs: number = 0;
